@@ -1,16 +1,37 @@
-# This is a sample Python script.
+from app.graph.builder import build_graph
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+graph = build_graph()
 
+buggy_code = """
+def calculate_average(numbers):
+    total = 0
+    for i in range(len(numbers) + 1):
+        total += numbers[i]
+    return total / len(numbers)
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+result = calculate_average([10, 20, 30])
+print(result)
+"""
 
+initial_state = {
+    "original_code": buggy_code,
+    "current_code": buggy_code,
+    "error_history": [],
+    "analysis": None,
+    "execution_output": None,
+    "execution_error": None,
+    "success": False,
+    "attempt": 0,
+    "max_attempts": 5,
+    "final_status": None,
+}
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+result = graph.invoke(initial_state)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+print("Final status:", result["final_status"])
+print("Attempts used:", result["attempt"])
+print("Final code:\n", result["current_code"])
+print("Output:", result["execution_output"])
+print("\n--- Error history ---")
+for i, err in enumerate(result["error_history"], start=1):
+    print(f"Attempt {i}: {err}")
