@@ -11,3 +11,5 @@ class DebugState(TypedDict):
     attempt: int                 # how many fix attempts have been made so far
     max_attempts: int            # configurable ceiling on retries
     final_status: Optional[str]  # "success" | "gave_up", set at the end
+    expected_output: Optional[str]  # NEW — user-supplied expected stdout, if any
+    correctness_checked: bool  # NEW — whether we actually verified output, or just checked "no crash"

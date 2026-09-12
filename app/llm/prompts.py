@@ -1,11 +1,15 @@
 import re
 def build_analysis_prompt(code: str, error: str | None) -> str:
-    error_section = f"\nThe code produced this error when run:\n{error}" if error else \
-        "\nNo execution has happened yet — analyze the code purely by reading it."
+    if error and error.startswith("Output mismatch."):
+        error_section = f"\nThe code ran without crashing, but produced incorrect output:\n{error}"
+    elif error:
+        error_section = f"\nThe code produced this error when run:\n{error}"
+    else:
+        error_section = "\nNo execution has happened yet — analyze the code purely by reading it."
 
     return f"""You are a Python debugging expert. Analyze the following code.
 {error_section}
-
+...
 Code:
 ```python
 {code}

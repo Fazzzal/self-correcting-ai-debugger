@@ -20,6 +20,12 @@ code_input = st.text_area(
     placeholder="def add(a, b)\n    return a + b",
 )
 
+expected_output = st.text_area(
+    "Expected output (optional)",
+    height=100,
+    placeholder="Leave blank to only check that the code runs without errors",
+)
+
 run_button = st.button("Debug this code", type="primary")
 
 # Maps internal node names to friendly labels for the live log
@@ -47,6 +53,8 @@ if run_button:
             "attempt": 0,
             "max_attempts": max_attempts,
             "final_status": None,
+            "expected_output": expected_output if expected_output.strip() else None,
+            "correctness_checked": False,
         }
 
         live_log = st.container()
@@ -89,7 +97,11 @@ if run_button:
         st.divider()
         if final_result:
             if final_result.get("final_status") == "success":
-                st.success(f"Fixed successfully in {final_result['attempt']} attempt(s).")
+                if final_result.get("correctness_checked"):
+                    st.success(f"Fixed and verified correct in {final_result['attempt']} attempt(s).")
+                else:
+                    st.success(
+                        f"Ran without errors in {final_result['attempt']} attempt(s) — output not verified against an expected value.")
             else:
                 st.error(f"Gave up after {final_result['attempt']} attempt(s). Manual review needed.")
 

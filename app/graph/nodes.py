@@ -50,15 +50,36 @@ def execute_node(state: DebugState) -> DebugState:
 
 def evaluate_node(state: DebugState) -> DebugState:
     """
-    Marks success/failure based on the last execution.
-    Routing (retry vs give up) happens separately in edges.py — this node
-    only records the outcome.
+    Marks success/failure. If the user supplied expected_output, success
+    requires an exact match (after trimming whitespace) in addition to
+    clean execution. Otherwise, success just means no execution error —
+    and we flag that this was NOT a verified-correct result.
     """
-    state["success"] = state["execution_error"] is None
+    ran_cleanly = state["execution_error"] is None
+    expected = state.get("expected_output")
+
+    if expected is not None and expected.strip() != "":
+        actual = (state["execution_output"] or "").strip()
+        matches_expected = actual == expected.strip()
+        state["success"] = ran_cleanly and matches_expected
+        state["correctness_checked"] = True
+
+        if ran_cleanly and not matches_expected:
+            # Treat a wrong-output result as a new "error" so the retry loop
+            # has something concrete to react to
+            mismatch_msg = (
+                f"Output mismatch. Expected:\n{expected.strip()}\n"
+                f"Got:\n{actual}"
+            )
+            state["execution_error"] = mismatch_msg
+            state["error_history"].append(mismatch_msg)
+    else:
+        state["success"] = ran_cleanly
+        state["correctness_checked"] = False
 
     if state["success"]:
         state["final_status"] = "success"
     elif state["attempt"] >= state["max_attempts"]:
         state["final_status"] = "gave_up"
-    # else: leave final_status as None — the graph will loop back
+
     return state
